@@ -1,15 +1,18 @@
 import React from 'react';
 import logo from './logo.svg';
 import './App.css';
+import {sayHi, sayBye} from './say.js';
 
 function App() {
   return (
+    
     <div className="App">
       <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
         <p>
-          Edit <code>src/App.js</code> and save to reload.
+          Edit <code>src/App.js</code> and save to reload!!!!.
         </p>
+        <button onClick={sayBye}></button>
         <a
           className="App-link"
           href="https://reactjs.org"
