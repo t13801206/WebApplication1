@@ -12,7 +12,8 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Models;
-
+using Microsoft.Extensions.Options;
+using WebApplication1.Services;
 
 namespace WebApplication1
 {
@@ -28,8 +29,14 @@ namespace WebApplication1
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<TodoContext>(opt =>
-                    opt.UseInMemoryDatabase("TodoList"));
+            services.AddDbContext<TodoContext>(options => options.UseInMemoryDatabase("TodoList"));
+            services.AddDbContext<WorkContext>(options => options.UseInMemoryDatabase(nameof(WorkContext)));
+
+            // requires using Microsoft.Extensions.Options
+            services.Configure<BookstoreDatabaseSettings>(Configuration.GetSection(nameof(BookstoreDatabaseSettings)));
+            services.AddSingleton<IBookstoreDatabaseSettings>(sp => sp.GetRequiredService<IOptions<BookstoreDatabaseSettings>>().Value);
+            services.AddSingleton<BookService>();
+
             services.AddControllers();
         }
 
