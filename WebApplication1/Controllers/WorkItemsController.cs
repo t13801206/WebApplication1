@@ -29,7 +29,7 @@ namespace WebApplication1.Controllers
 
         // GET: api/WorkItems/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<WorkItem>> GetWorkItem(long id)
+        public async Task<ActionResult<WorkItem>> GetWorkItem(string id)
         {
             var workItem = await _context.WorkItems.FindAsync(id);
 
@@ -45,9 +45,9 @@ namespace WebApplication1.Controllers
         // To protect from overposting attacks, enable the specific properties you want to bind to, for
         // more details, see https://go.microsoft.com/fwlink/?linkid=2123754.
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutWorkItem(long id, WorkItem workItem)
+        public async Task<IActionResult> PutWorkItem(string id, WorkItem workItem)
         {
-            if (id != workItem.Id)
+            if (id != workItem.Dir)
             {
                 return BadRequest();
             }
@@ -80,14 +80,28 @@ namespace WebApplication1.Controllers
         public async Task<ActionResult<WorkItem>> PostWorkItem(WorkItem workItem)
         {
             _context.WorkItems.Add(workItem);
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                if (WorkItemExists(workItem.Dir))
+                {
+                    return Conflict();
+                }
+                else
+                {
+                    throw;
+                }
+            }
 
-            return CreatedAtAction("GetWorkItem", new { id = workItem.Id }, workItem);
+            return CreatedAtAction("GetWorkItem", new { id = workItem.Dir }, workItem);
         }
 
         // DELETE: api/WorkItems/5
         [HttpDelete("{id}")]
-        public async Task<ActionResult<WorkItem>> DeleteWorkItem(long id)
+        public async Task<ActionResult<WorkItem>> DeleteWorkItem(string id)
         {
             var workItem = await _context.WorkItems.FindAsync(id);
             if (workItem == null)
@@ -101,9 +115,9 @@ namespace WebApplication1.Controllers
             return workItem;
         }
 
-        private bool WorkItemExists(long id)
+        private bool WorkItemExists(string id)
         {
-            return _context.WorkItems.Any(e => e.Id == id);
+            return _context.WorkItems.Any(e => e.Dir == id);
         }
     }
 }

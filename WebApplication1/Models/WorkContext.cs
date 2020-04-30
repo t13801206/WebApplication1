@@ -13,5 +13,12 @@ namespace WebApplication1.Models
         }
 
         public DbSet<WorkItem> WorkItems { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<WorkItem>()
+                .HasKey(c => new {c.Dir, c.File, c.Worker});
+        }
+
     }
 }
