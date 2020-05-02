@@ -2,6 +2,7 @@ import React from 'react';
 import './WorkApp.css';
 
 
+const uri = 'api/ftp';
 const todos = [
     { id: 0, title: 'Task 0', isDone: false },
     { id: 1, title: 'Task 1', isDone: false },
@@ -18,7 +19,7 @@ function Header(props) {
         //     WOOOOOOOOO
         //     <span>({remaining.length}/{props.todos.length})</span>
         // </h1>
-        <h1>Wokkk</h1>
+        <h1>This is Header</h1>
     );
 }
 
@@ -90,12 +91,18 @@ function WorkingDirs() {
     );
 }
 
-function Workers(){
-    return(
+function Workers(props) {
+    const workers = props.workers.map(worker => {
+        return (
+            <option value="sa">{worker}</option>
+        );
+    });
+    return (
         <select name="example">
             <option value="サンプル1">Worker1</option>
             <option value="サンプル2">Worker2</option>
             <option value="サンプル3">Worker3</option>
+            {workers}
         </select>
     );
 }
@@ -106,13 +113,32 @@ class WorkApp extends React.Component {
         super();
         this.state = {
             todos: todos,
-            item: ''
+            item: '',
+            workers: ["a1", "b1", "c1"]
         };
         this.checkTodo = this.checkTodo.bind(this);
         this.deleteTodo = this.deleteTodo.bind(this);
         this.updateItem = this.updateItem.bind(this);
         this.addTodo = this.addTodo.bind(this);
         this.purge = this.purge.bind(this);
+        this.setWorkers = this.setWorkers.bind(this);
+    }
+
+    setWorkers() {
+        fetch(uri)
+            .then(response =>{ response.json(); console.log(response.json)})
+            .then(data => {
+                this.setState({
+                    
+            // workers: ["aaa", "bbb", "ccc"]
+            workers: data
+                });
+            })
+            // .then(data => _displayItems(data))
+            .catch(error => console.error('Unable to get items.', error));
+        // this.setState({
+        //     workers: ["aaa", "bbb", "ccc"]
+        // });
     }
 
     purge() {
@@ -199,8 +225,13 @@ class WorkApp extends React.Component {
                 // purge={this.purge}
                 />
 
-                <WorkingDirs />
-                <Workers />
+                <WorkingDirs
+                />
+                <Workers
+                    workers={this.state.workers}
+                />
+
+                <button onClick={this.setWorkers}>ボタン</button>
 
 
                 {/* <TodoList
@@ -217,6 +248,5 @@ class WorkApp extends React.Component {
         );
     }
 }
-
 
 export default WorkApp;
