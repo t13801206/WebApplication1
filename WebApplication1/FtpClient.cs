@@ -29,36 +29,38 @@ namespace WebApplication1
         }
         public string GetImageDataBase64(string dirName, string fileName)
         {
-            string retStr;
-
-            //var str = Path.Combine(_uriRootStr, dirName, GetFileName(dirName, fileIndex));
-            var str = Path.Combine(_uriRootStr, dirName, fileName);
-
-            FtpWebRequest ftpReq = (FtpWebRequest)WebRequest.Create(new Uri(str));
-            ftpReq.Credentials = new NetworkCredential(_username, _password);
-            ftpReq.Method = WebRequestMethods.Ftp.DownloadFile;
-            ftpReq.KeepAlive = false;
-            ftpReq.UsePassive = false;
-            ftpReq.UseBinary = false;
-
-            using (FtpWebResponse ftpRes = (FtpWebResponse)ftpReq.GetResponse())
-            using (Stream resStrm = ftpRes.GetResponseStream())
-            using (MemoryStream memStream = new MemoryStream())
+            string retStr = "";
+            try
             {
-                byte[] buffer = new byte[1024];
-                while (true)
+                //var str = Path.Combine(_uriRootStr, dirName, GetFileName(dirName, fileIndex));
+                var str = Path.Combine(_uriRootStr, dirName, fileName);
+
+                FtpWebRequest ftpReq = (FtpWebRequest)WebRequest.Create(new Uri(str));
+                ftpReq.Credentials = new NetworkCredential(_username, _password);
+                ftpReq.Method = WebRequestMethods.Ftp.DownloadFile;
+                ftpReq.KeepAlive = false;
+                ftpReq.UsePassive = false;
+                ftpReq.UseBinary = false;
+
+                using (FtpWebResponse ftpRes = (FtpWebResponse)ftpReq.GetResponse())
+                using (Stream resStrm = ftpRes.GetResponseStream())
+                using (MemoryStream memStream = new MemoryStream())
                 {
-                    int readSize = resStrm.Read(buffer, 0, buffer.Length);
-                    if (readSize == 0)
-                        break;
+                    byte[] buffer = new byte[1024];
+                    while (true)
+                    {
+                        int readSize = resStrm.Read(buffer, 0, buffer.Length);
+                        if (readSize == 0)
+                            break;
 
-                    memStream.Write(buffer, 0, readSize);
+                        memStream.Write(buffer, 0, readSize);
+                    }
+
+                    byte[] b = memStream.ToArray();
+                    retStr = Convert.ToBase64String(b);
                 }
-
-                byte[] b = memStream.ToArray();
-                retStr = Convert.ToBase64String(b);
             }
-
+            catch (Exception e) { }
             return retStr;
         }
         public string GetJsonFile()
@@ -106,25 +108,31 @@ namespace WebApplication1
         }
         private string[] GetFtpList(string uri)
         {
-            string[] retArr;
-
-            // リクエストの設定
-            FtpWebRequest ftpReq = (FtpWebRequest)WebRequest.Create(new Uri(uri));
-            ftpReq.Credentials = new NetworkCredential(_username, _password);
-            ftpReq.Method = WebRequestMethods.Ftp.ListDirectory;
-            ftpReq.KeepAlive = false;
-            ftpReq.UsePassive = false;
-
-            using (FtpWebResponse ftpRes = (FtpWebResponse)ftpReq.GetResponse())
-            using (StreamReader sr = new StreamReader(ftpRes.GetResponseStream()))
+            string[] retArr = new string[] { "" };
+            try
             {
-                string res = sr.ReadToEnd();
-                //retArr = res.Replace("\r\n", "\n").Split(new[] { '\n', '\r' });
-                retArr = res.Replace("\r\n", ",").Split(',').Where(x => x != "").Where(x => !x.Contains(".txt")).ToArray();
+                // リクエストの設定
+                FtpWebRequest ftpReq = (FtpWebRequest)WebRequest.Create(new Uri(uri));
+                ftpReq.Credentials = new NetworkCredential(_username, _password);
+                ftpReq.Method = WebRequestMethods.Ftp.ListDirectory;
+                ftpReq.KeepAlive = false;
+                ftpReq.UsePassive = false;
+
+                using (FtpWebResponse ftpRes = (FtpWebResponse)ftpReq.GetResponse())
+                using (StreamReader sr = new StreamReader(ftpRes.GetResponseStream()))
+                {
+                    string res = sr.ReadToEnd();
+                    //retArr = res.Replace("\r\n", "\n").Split(new[] { '\n', '\r' });
+                    retArr = res.Replace("\r\n", ",").Split(',').Where(x => x != "").Where(x => !x.Contains(".json")).ToArray();
 
 
-                // 表示
-                Debug.WriteLine(res);
+                    // 表示
+                    Debug.WriteLine(res);
+                }
+            }
+            catch(Exception e)
+            {
+
             }
 
             return retArr;
