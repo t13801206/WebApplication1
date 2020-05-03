@@ -27,19 +27,21 @@ namespace WebApplication1.Controllers
         }
 
         // GET: api/Ftp/5
-        [HttpGet("{dirName}", Name = "Get")]
-        public string Get(int id)
+        //[HttpGet("{dirName}", Name = "Get")]
+        [HttpGet("{dirName}")]
+        public IEnumerable<string> GetFiles(string dirName)
         {
-            return "return direName";
+            return _ftpClient.GetFtpFiles(dirName);
         }
 
         // GET: api/Ftp/Dataset1/Image1
-        [HttpGet("{dirName}/{fileName}", Name = "Getaa")]
-        public string Getaa(string temp)
+        //[HttpGet("{dirName}/{fileName}", Name = "GetImage")]
+        [HttpGet("{dirName}/{fileName}")]
+        public string GetImage(string temp)
         {
-            //return _ftpClient.GetImageDataBase64();
+            return _ftpClient.GetImageDataBase64("direName", "fileName");
 
-          return "value";
+          //return "value";
         }
 
 
