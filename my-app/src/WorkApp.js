@@ -90,7 +90,7 @@ function WorkingDirs(props) {
         );
     });
     return (
-        <select id="workingDirs" name="example">
+        <select id="workingDirs" name="example" onChange={() => props.setFiles()}>
             {workingDirs}
             <option value="サンプル1">サンプル1</option>
             <option value="サンプル2">サンプル2</option>
@@ -146,11 +146,11 @@ function Types(props) {
 
 
 function Files(props) {
-    const files = props.files.map((file,index) => {
+    const files = props.files.map((file, index) => {
         return (
             <li>
                 <label>
-                    <input type="radio" name="file" value={index} />
+                    <input type="radio" name="file" value={file} />
                     {file}
                 </label>
             </li>
@@ -201,15 +201,29 @@ class WorkApp extends React.Component {
     buttonClick(index) {
         console.log(`button ${index} clicked`);
 
+
+        let radioList = document.getElementsByName("file");
+        let str;
+        for (var i = 0; i < radioList.length; i++) {
+            if (radioList[i].checked) {
+                str = radioList[i].value;
+                break;
+            }
+        }
+
+        const file = str;
+
+
         const dir = document.getElementById("workingDirs").value;
         const worker = document.getElementById("workers").value;
 
         const item = {
-            "dir": { dir },
-            "file": "file",
-            "worker": { worker },
-            "result": { index }
+            "dir": dir,
+            "file": file,
+            "worker": worker,
+            "result": "1"
         };
+        console.log(item);
 
         fetch(uri_workItems, {
             method: 'POST',
@@ -225,11 +239,11 @@ class WorkApp extends React.Component {
                 // addNameTextbox.value = '';
                 console.log("POST OK");
             })
-            .catch(error => console.error('Unable to add item.', error));
+            .catch(error => console.error('Unable to POST item.', error));
     }
 
     setWorkingDirs() {
-        fetch(uri_ftp)
+        const promise = fetch(uri_ftp)
             .then(response => response.json())
             .then(jsonBody => {
                 console.log(jsonBody);
@@ -239,11 +253,14 @@ class WorkApp extends React.Component {
                 workingDirs: result
             }))
             .catch(error => console.error('Unable to get workingDirs.', error));
+
+        promise.then(() => this.setFiles());
     }
     setSettings() {
-        fetch(uri_settings)
+        const promise = fetch(uri_settings)
             .then(response => response.json())
             .then(jsonBody => {
+                console.log("setting Json is ...");
                 console.log(jsonBody);
                 return jsonBody;
             })
@@ -252,6 +269,13 @@ class WorkApp extends React.Component {
             }))
             .then(console.log("read settings.json"))
             .catch(error => console.error('Unable to get settings.', error));
+
+        promise.then(() => {
+            this.setState({
+                types: this.state.settings[0].className,
+                workers: this.state.settings[0].worker
+            });
+        });
 
 
     }
@@ -363,14 +387,21 @@ class WorkApp extends React.Component {
         // localStorage.setItem('todos', JSON.stringify(this.state.todos));
     }
 
+    componentWillMount() {
+        console.log("componentWillMount")
+        this.setSettings();
+        this.setWorkingDirs();
+    }
+
     // 定義済みライフサイクルメソッド
     componentDidMount() {
+        console.log("componentDidMount")
         // this.setState({
         //     todos: JSON.parse(localStorage.getItem('todos')) || []
         // });
-        this.setSettings();
-        this.setWorkingDirs();
-        this.setTypes();
+
+        // this.setTypes();
+        console.log(this.state.types);
     }
 
     render() {
@@ -383,7 +414,7 @@ class WorkApp extends React.Component {
 
                 <WorkingDirs
                     workingDirs={this.state.workingDirs}
-                    setWorkingDirs={this.setWorkingDirs}
+                    setFiles={this.setFiles}
                 />
                 <br />
                 <Models
@@ -400,7 +431,6 @@ class WorkApp extends React.Component {
                     buttonClick={this.buttonClick}
                 />
 
-                <button onClick={this.setFiles}>Filesを読み込む</button>
                 <button onClick={this.setImage}>画像を読み込む</button>
 
                 <Files files={this.state.files} />
