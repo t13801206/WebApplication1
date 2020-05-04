@@ -133,9 +133,12 @@ function Workers(props) {
 function Types(props) {
     const types = props.types.map((type, index) => {
         return (
-            <button onClick={() => props.buttonClick(index)}>{type}</button>
+            <button name={`button${index}`} disabled={!props.isWorking} onClick={() => props.buttonClick(index)}>{type} - key{index}</button>
         );
     });
+
+
+
     return (
         <div>
             {types}
@@ -150,7 +153,7 @@ function Files(props) {
         return (
             <li>
                 <label>
-                    <input type="radio" name="file" value={file} />
+                    <input type="radio" name="file" value={file} checked="true" />
                     {file}
                 </label>
             </li>
@@ -165,10 +168,24 @@ function Files(props) {
 
 function ImagePlace(props) {
     return (
-        <img alt="" src={props.image}></img>
+        <div>
+            <img alt="" src={props.image}></img>
+        </div>
     );
 }
 
+function SaveButton(props) {
+    return (
+        <button onClick={() => props.save()}>saveButton</button>
+    );
+}
+
+function StateButton(props) {
+    let tmp= props.isWorking ? "戻る" : "開始";
+    return (
+        <button onClick={()=>props.onToggle()}>{tmp}</button>
+    );
+}
 // このクラスにのみステータスを持たせる（親から子へ伝播）
 class WorkApp extends React.Component {
     constructor() {
@@ -183,7 +200,10 @@ class WorkApp extends React.Component {
             files: ["file1", "file2"],
             selectedDir: "",
             settings: [{ "model": "dammy", "worker": ["dammmy"], "className": ["dammy"] }],
-            types: ["type1"]
+            types: ["type1"],
+            checkedFileIndex: "",
+            saveItems: "",
+            isWorking: false
         };
         this.checkTodo = this.checkTodo.bind(this);
         this.deleteTodo = this.deleteTodo.bind(this);
@@ -196,22 +216,54 @@ class WorkApp extends React.Component {
         this.setImage = this.setImage.bind(this);
         this.setTypes = this.setTypes.bind(this);
         this.buttonClick = this.buttonClick.bind(this);
+        this.setCheckedFileIndex = this.setCheckedFileIndex.bind(this);
+        this.save = this.save.bind(this);
+        this.getResults = this.getResults.bind(this);
+        this.onToggle=this.onToggle.bind(this);
     }
+
+    setCheckedFileIndex() {
+
+        let radioList = document.getElementsByName("file");
+        let index;
+        for (var i = 0; i < radioList.length; i++) {
+            if (radioList[i].checked) {
+                index = i
+                break;
+            }
+        }
+
+
+
+        this.setState({
+            checkedFileIndex: index
+
+        })
+        console.log(`checked radio button: ${index}`)
+    }
+onToggle(){
+
+    const tmp = this.state.isWorking;
+    console.log(`toggle ${this.state.isWorking} ${tmp} ${!tmp}` );
+    this.setState({isWorking: !tmp});
+}
 
     buttonClick(index) {
         console.log(`button ${index} clicked`);
 
 
-        let radioList = document.getElementsByName("file");
-        let str;
-        for (var i = 0; i < radioList.length; i++) {
-            if (radioList[i].checked) {
-                str = radioList[i].value;
-                break;
-            }
-        }
+        // let radioList = document.getElementsByName("file");
+        // let str;
+        // for (var i = 0; i < radioList.length; i++) {
+        //     if (radioList[i].checked) {
+        //         str = radioList[i].value;
+        //         this.setImage(i + 1);
+        //         break;
+        //     }
+        // }
 
-        const file = str;
+        const file = this.state.files.shift();
+        this.setImage(0);
 
 
         const dir = document.getElementById("workingDirs").value;
@@ -221,7 +273,7 @@ class WorkApp extends React.Component {
             "dir": dir,
             "file": file,
             "worker": worker,
-            "result": "1"
+            "result": index.toString()
         };
         console.log(item);
 
@@ -282,7 +334,7 @@ class WorkApp extends React.Component {
     setFiles() {
         const selectedDir = document.getElementById("workingDirs").value;
         console.log(`${uri_ftp}/${selectedDir}`);
-        fetch(`${uri_ftp}/${selectedDir}`)
+        const promise = fetch(`${uri_ftp}/${selectedDir}`)
             .then(response => response.json())
             .then(jsonBody => {
                 console.log(jsonBody);
@@ -293,6 +345,8 @@ class WorkApp extends React.Component {
                 files: result
             }))
             .catch(error => console.error('Unable to get files.', error));
+
+        promise.then(() => this.setImage(0));
     }
     setTypes() {
         const selectedIndex = document.getElementById("models").selectedIndex;
@@ -305,17 +359,70 @@ class WorkApp extends React.Component {
     }
 
 
-    setImage() {
-        fetch(`${uri_ftp}/${this.state.selectedDir}/${this.state.files[999]}`)
-            .then(response => response.json())
-            .then(jsonBody => {
-                console.log(jsonBody);
-                return jsonBody;
+    setImage(index) {
+        console.log(`${uri_ftp}/${this.state.selectedDir}/${this.state.files[index]}`)
+        fetch(`${uri_ftp}/${this.state.selectedDir}/${this.state.files[index]}`)
+            .then(response => response.text())
+            .then(responseText => {
+                console.log("image:::")
+                console.log(responseText);
+                return responseText;
             })
             .then(result => this.setState({
                 image: result
             }))
             .catch(error => console.error('Unable to setImage', error));
+    }
+
+    getResults() {
+        let tmp;
+        const promise = fetch(uri_workItems)
+            .then(response => response.json())
+            .then(jsonBody => {
+                console.log("now result");
+                console.log(jsonBody);
+                tmp = jsonBody;
+            })
+            .catch(error => console.error('Unable to get save items', error));
+
+        promise.then(() => {
+            for (var i = 0; i < tmp.length; i++) {
+                if (tmp[i].dir === this.state.workingDir) {
+
+                    break;
+                }
+            }
+
+        });
+
+
+
+    }
+
+    save() {
+        const promise = fetch(uri_workItems)
+            .then(response => response.json())
+            .then(jsonBody => {
+                console.log("save items:");
+                console.log(jsonBody);
+                return jsonBody;
+            })
+            .then(result => this.setState({
+                saveItems: result,
+            }))
+            .catch(error => console.error('Unable to get save items', error));
+
+        promise.then(() => {
+            let write_json = JSON.stringify(this.state.saveItems);
+            let blob = new Blob([write_json], { type: 'application/json' });
+            let a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            // document.body.appendChild(a); // Firefoxで必要
+            a.download = 'result.json';
+            a.click();
+            // document.body.removeChild(a); // Firefoxで必要
+            URL.revokeObjectURL(a.href);
+        });
     }
 
     purge() {
@@ -340,6 +447,8 @@ class WorkApp extends React.Component {
             todos: todos
         });
     }
+
+
 
     deleteTodo(todo) {
 
@@ -391,17 +500,43 @@ class WorkApp extends React.Component {
         console.log("componentWillMount")
         this.setSettings();
         this.setWorkingDirs();
+        document.addEventListener("keydown", e => {
+            console.log(`key down ${e.key} - ${e.keyCode}`);
+
+            if (!this.state.isWorking) {
+                return;
+            }
+
+            if (e.keyCode < 48 || 57 < e.keyCode) {
+                return;
+            }
+            console.log(`key down OK ${e.key} - ${e.keyCode}`);
+
+            const kkey = parseInt(e.key);
+            if (kkey + 1 > this.state.types.length) {
+                return;
+            }
+
+            this.buttonClick(e.key);
+
+            // if().buttonClick(e.key);
+
+            //   if (event.isComposing || e.keyCode === 229) {
+            //     return;
+            //   }
+        });
     }
+
 
     // 定義済みライフサイクルメソッド
     componentDidMount() {
-        console.log("componentDidMount")
+        // console.log("componentDidMount")
         // this.setState({
         //     todos: JSON.parse(localStorage.getItem('todos')) || []
         // });
 
         // this.setTypes();
-        console.log(this.state.types);
+        // console.log(this.state.types);
     }
 
     render() {
@@ -411,32 +546,46 @@ class WorkApp extends React.Component {
                 // todos={this.state.todos}
                 // purge={this.purge}
                 />
+                <StateButton
+onToggle={this.onToggle}
+isWorking={this.state.isWorking}
+                />
 
-                <WorkingDirs
-                    workingDirs={this.state.workingDirs}
-                    setFiles={this.setFiles}
-                />
-                <br />
-                <Models
-                    settings={this.state.settings}
-                    setTypes={this.setTypes}
-                />
-                <br />
+                <div hidden={this.state.isWorking}>
 
-                <Workers
-                    workers={this.state.workers}
-                />
+
+                    <WorkingDirs
+                        workingDirs={this.state.workingDirs}
+                        setFiles={this.setFiles}
+                    />
+                    <SaveButton
+                        save={this.save}
+                    />
+                    <br />
+                    <Models
+                        settings={this.state.settings}
+                        setTypes={this.setTypes}
+                    />
+                    <br />
+
+                    <Workers
+                        workers={this.state.workers}
+                    />
+                </div>
                 <Types
                     types={this.state.types}
+                    isWorking={this.state.isWorking}
                     buttonClick={this.buttonClick}
                 />
+                <div hidden={!this.state.isWorking}>
 
-                <button onClick={this.setImage}>画像を読み込む</button>
+                    <ImagePlace image={this.state.image} />
 
-                <Files files={this.state.files} />
-                <br />
-                <ImagePlace image={this.state.image} />
-
+                    <Files
+                        files={this.state.files}
+                    />
+                    <br />
+                </div>
 
                 {/* <TodoList
                     todos={this.state.todos}
@@ -448,7 +597,7 @@ class WorkApp extends React.Component {
                     updateItem={this.updateItem}
                     addTodo={this.addTodo}
                 /> */}
-            </div>
+            </div >
         );
     }
 }

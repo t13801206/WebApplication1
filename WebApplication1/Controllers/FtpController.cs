@@ -37,11 +37,14 @@ namespace WebApplication1.Controllers
         // GET: api/Ftp/Dataset1/Image1
         //[HttpGet("{dirName}/{fileName}", Name = "GetImage")]
         [HttpGet("{dirName}/{fileName}")]
-        public string GetImage(string temp)
-        {
-            return _ftpClient.GetImageDataBase64("direName", "fileName");
-
-          //return "value";
+        public string GetImage(string dirName, string fileName) {
+            if (fileName.Contains(".png"))
+                return "data:image/png;base64,"+ _ftpClient.GetImageDataBase64(dirName, fileName);
+            else if (fileName.Contains(".bmp"))
+                return "data:image/bmp;base64," + _ftpClient.GetImageDataBase64(dirName, fileName);
+            else
+                return "";
+            //return "value";
         }
 
 
