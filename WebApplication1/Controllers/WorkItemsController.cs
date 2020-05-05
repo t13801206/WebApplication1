@@ -29,9 +29,10 @@ namespace WebApplication1.Controllers
 
         // GET: api/WorkItems/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<WorkItem>> GetWorkItem(string id)
+        public async Task<ActionResult<IEnumerable< WorkItem>>> GetWorkItem(string id)
         {
-            var workItem = await _context.WorkItems.FindAsync(id);
+            //var workItem = await _context.WorkItems.FindAsync(id);
+            var workItem = await _context.WorkItems.Where(x => x.Dir == id).ToListAsync();
 
             if (workItem == null)
             {

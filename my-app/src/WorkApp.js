@@ -16,72 +16,10 @@ function Header(props) {
     //     return !todo.isDone;
     // });
     return (
-        // <h1>
-        //     <button onClick={props.purge}>Purge</button>
-        //     WOOOOOOOOO
-        //     <span>({remaining.length}/{props.todos.length})</span>
-        // </h1>
-        <h1>This is Header va</h1>
+        <h1>Bunrui</h1>
     );
 }
 
-
-function TodoItem(props) {
-    return (
-        <li>
-            <label>
-                <input type="checkbox"
-                    checked={props.todo.isDone}
-                    onChange={() => props.checkTodo(props.todo)}
-                />
-                <span className={props.todo.isDone ? 'done' : ''}>
-                    {props.todo.title}
-                </span>
-            </label>
-
-            <span
-                className="cmd"
-                onClick={() => props.deleteTodo(props.todo)}>
-                [x]
-            </span>
-        </li>
-    );
-}
-
-// ステートを保持しないならば function を使う
-function TodoList(props) {
-    const todos = props.todos.map(todo => {
-        return (
-            // <li key={todo.id}>{todo.title}</li>
-            <TodoItem
-                key={todo.id}
-                todo={todo}
-                checkTodo={props.checkTodo}
-                deleteTodo={props.deleteTodo}
-            />
-        );
-    });
-    return (
-        <ul>
-            {props.todos.length ? todos : <li>Nothig</li>}
-        </ul>
-    );
-}
-
-function TodoForm(props) {
-    // テキストボックスの文字列はAppのステートなので、直接は変更できない
-    return (
-        <form onSubmit={props.addTodo}>
-            <input type="text" value={props.item} onChange={props.updateItem} />
-            <input type="submit" value="ADD" />
-        </form>
-    );
-
-}
-
-function getUniqueId() {
-    return new Date().getTime().toString(36) + '-' + Math.random().toString(36);
-}
 
 function WorkingDirs(props) {
     const workingDirs = props.workingDirs.map(workingDir => {
@@ -152,10 +90,7 @@ function Files(props) {
     const files = props.files.map((file, index) => {
         return (
             <li>
-                <label>
-                    <input type="radio" name="file" value={file} checked="true" />
-                    {file}
-                </label>
+                {file}
             </li>
         );
     });
@@ -169,7 +104,7 @@ function Files(props) {
 function ImagePlace(props) {
     return (
         <div>
-            <img alt="" src={props.image}></img>
+            <img alt="" src={props.image} width="512"></img>
         </div>
     );
 }
@@ -181,9 +116,9 @@ function SaveButton(props) {
 }
 
 function StateButton(props) {
-    let tmp= props.isWorking ? "戻る" : "開始";
+    let tmp = props.isWorking ? "戻る" : "開始";
     return (
-        <button onClick={()=>props.onToggle()}>{tmp}</button>
+        <button onClick={() => props.onToggle()}>{tmp}</button>
     );
 }
 // このクラスにのみステータスを持たせる（親から子へ伝播）
@@ -191,8 +126,6 @@ class WorkApp extends React.Component {
     constructor() {
         super();
         this.state = {
-            todos: todos,
-            item: '',
             models: ["m1", "m2"],
             workingDirs: ["dir1", "dir2", "dir3"],
             workers: ["a1", "b1", "c1"],
@@ -201,70 +134,30 @@ class WorkApp extends React.Component {
             selectedDir: "",
             settings: [{ "model": "dammy", "worker": ["dammmy"], "className": ["dammy"] }],
             types: ["type1"],
-            checkedFileIndex: "",
             saveItems: "",
             isWorking: false
         };
-        this.checkTodo = this.checkTodo.bind(this);
-        this.deleteTodo = this.deleteTodo.bind(this);
-        this.updateItem = this.updateItem.bind(this);
-        this.addTodo = this.addTodo.bind(this);
-        this.purge = this.purge.bind(this);
         this.setWorkingDirs = this.setWorkingDirs.bind(this);
         this.setSettings = this.setSettings.bind(this);
         this.setFiles = this.setFiles.bind(this);
         this.setImage = this.setImage.bind(this);
         this.setTypes = this.setTypes.bind(this);
         this.buttonClick = this.buttonClick.bind(this);
-        this.setCheckedFileIndex = this.setCheckedFileIndex.bind(this);
         this.save = this.save.bind(this);
-        this.getResults = this.getResults.bind(this);
-        this.onToggle=this.onToggle.bind(this);
+        this.onToggle = this.onToggle.bind(this);
     }
 
-    setCheckedFileIndex() {
-
-        let radioList = document.getElementsByName("file");
-        let index;
-        for (var i = 0; i < radioList.length; i++) {
-            if (radioList[i].checked) {
-                index = i
-                break;
-            }
-        }
-
-
-
-        this.setState({
-            checkedFileIndex: index
-
-        })
-        console.log(`checked radio button: ${index}`)
+    onToggle() {
+        const tmp = this.state.isWorking;
+        console.log(`toggle ${this.state.isWorking} ${tmp} ${!tmp}`);
+        this.setState({ isWorking: !tmp });
     }
-onToggle(){
-
-    const tmp = this.state.isWorking;
-    console.log(`toggle ${this.state.isWorking} ${tmp} ${!tmp}` );
-    this.setState({isWorking: !tmp});
-}
 
     buttonClick(index) {
         console.log(`button ${index} clicked`);
 
-
-        // let radioList = document.getElementsByName("file");
-        // let str;
-        // for (var i = 0; i < radioList.length; i++) {
-        //     if (radioList[i].checked) {
-        //         str = radioList[i].value;
-        //         this.setImage(i + 1);
-        //         break;
-        //     }
-        // }
-
         const file = this.state.files.shift();
         this.setImage(0);
-
 
         const dir = document.getElementById("workingDirs").value;
         const worker = document.getElementById("workers").value;
@@ -277,6 +170,7 @@ onToggle(){
         };
         console.log(item);
 
+        let putFlag = false;
         fetch(uri_workItems, {
             method: 'POST',
             headers: {
@@ -285,17 +179,38 @@ onToggle(){
             },
             body: JSON.stringify(item)
         })
-            .then(response => response.json())
-            .then(() => {
-                // getItems();
-                // addNameTextbox.value = '';
-                console.log("POST OK");
+            .then(response => {
+                if (response.status === 500) {
+                    throw new Error('fail POST 500 データがすでに存在しています');
+                }
+                else {
+                    console.log("POST OK");
+                    return response.json();
+                }
             })
-            .catch(error => console.error('Unable to POST item.', error));
+            .then((jsonBody) => {
+                console.log(jsonBody);
+            })
+            .catch(error => {
+                console.error('Unable to POST item, next try to PUT', error);
+
+                fetch(`${uri_workItems}/${this.state.selectedDir}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(item)
+                })
+                    .then((response => {
+                        console.log(`${response.status} item update`);
+                    }))
+                    .catch(error => console.error('Unable to update item.', error));
+            });
     }
 
     setWorkingDirs() {
-        const promise = fetch(uri_ftp)
+        fetch(uri_ftp)
             .then(response => response.json())
             .then(jsonBody => {
                 console.log(jsonBody);
@@ -304,12 +219,11 @@ onToggle(){
             .then(result => this.setState({
                 workingDirs: result
             }))
+            .then(() => this.setFiles())
             .catch(error => console.error('Unable to get workingDirs.', error));
-
-        promise.then(() => this.setFiles());
     }
     setSettings() {
-        const promise = fetch(uri_settings)
+        fetch(uri_settings)
             .then(response => response.json())
             .then(jsonBody => {
                 console.log("setting Json is ...");
@@ -320,21 +234,21 @@ onToggle(){
                 settings: result,
             }))
             .then(console.log("read settings.json"))
-            .catch(error => console.error('Unable to get settings.', error));
 
-        promise.then(() => {
-            this.setState({
-                types: this.state.settings[0].className,
-                workers: this.state.settings[0].worker
-            });
-        });
+            .then(() => {
+                this.setState({
+                    types: this.state.settings[0].className,
+                    workers: this.state.settings[0].worker
+                });
+            })
+            .catch(error => console.error('Unable to get settings.', error));
 
 
     }
     setFiles() {
         const selectedDir = document.getElementById("workingDirs").value;
         console.log(`${uri_ftp}/${selectedDir}`);
-        const promise = fetch(`${uri_ftp}/${selectedDir}`)
+        fetch(`${uri_ftp}/${selectedDir}`)
             .then(response => response.json())
             .then(jsonBody => {
                 console.log(jsonBody);
@@ -344,9 +258,9 @@ onToggle(){
                 selectedDir: selectedDir,
                 files: result
             }))
+            .then(() => this.setImage(0))
             .catch(error => console.error('Unable to get files.', error));
 
-        promise.then(() => this.setImage(0));
     }
     setTypes() {
         const selectedIndex = document.getElementById("models").selectedIndex;
@@ -374,33 +288,8 @@ onToggle(){
             .catch(error => console.error('Unable to setImage', error));
     }
 
-    getResults() {
-        let tmp;
-        const promise = fetch(uri_workItems)
-            .then(response => response.json())
-            .then(jsonBody => {
-                console.log("now result");
-                console.log(jsonBody);
-                tmp = jsonBody;
-            })
-            .catch(error => console.error('Unable to get save items', error));
-
-        promise.then(() => {
-            for (var i = 0; i < tmp.length; i++) {
-                if (tmp[i].dir === this.state.workingDir) {
-
-                    break;
-                }
-            }
-
-        });
-
-
-
-    }
-
     save() {
-        const promise = fetch(uri_workItems)
+        fetch(`${uri_workItems}/${this.state.selectedDir}`)
             .then(response => response.json())
             .then(jsonBody => {
                 console.log("save items:");
@@ -410,85 +299,20 @@ onToggle(){
             .then(result => this.setState({
                 saveItems: result,
             }))
+
+            .then(() => {
+                let write_json = JSON.stringify(this.state.saveItems);
+                let blob = new Blob([write_json], { type: 'application/json' });
+                let a = document.createElement("a");
+                a.href = URL.createObjectURL(blob);
+                // document.body.appendChild(a); // Firefoxで必要
+                a.download = 'result.json';
+                a.click();
+                // document.body.removeChild(a); // Firefoxで必要
+                URL.revokeObjectURL(a.href);
+            })
+
             .catch(error => console.error('Unable to get save items', error));
-
-        promise.then(() => {
-            let write_json = JSON.stringify(this.state.saveItems);
-            let blob = new Blob([write_json], { type: 'application/json' });
-            let a = document.createElement("a");
-            a.href = URL.createObjectURL(blob);
-            // document.body.appendChild(a); // Firefoxで必要
-            a.download = 'result.json';
-            a.click();
-            // document.body.removeChild(a); // Firefoxで必要
-            URL.revokeObjectURL(a.href);
-        });
-    }
-
-    purge() {
-        // const todos = this.state.todos.filter(todo=>{
-        //   return !todo.isDone
-        const todos = this.state.todos.filter(todo => !todo.isDone);
-        this.setState({
-            todos: todos
-        });
-    }
-
-    checkTodo(todo) {
-        const todos = this.state.todos.map(todo => {
-            return { id: todo.id, title: todo.title, isDone: todo.isDone };
-        });
-        // 引数todoのidがどこのポジションであるか
-        const pos = this.state.todos.map(todo => {
-            return todo.id;
-        }).indexOf(todo.id);
-        todos[pos].isDone = !todos[pos].isDone;
-        this.setState({
-            todos: todos
-        });
-    }
-
-
-
-    deleteTodo(todo) {
-
-        // ステートを変更しない場合は、sliceでよい
-        const todos = this.state.todos.slice();
-        const pos = this.state.todos.indexOf(todo);
-
-        todos.splice(pos, 1);
-        this.setState({
-            todos: todos
-        });
-    }
-
-    updateItem(e) {
-        this.setState({
-            item: e.target.value
-        });
-    }
-
-    addTodo(e) {
-        // 画面遷移回避
-        e.preventDefault();
-
-        if (this.state.item.trim() === '') {
-            return;
-        }
-
-        const item = {
-            id: getUniqueId(),
-            title: this.state.item,
-            isDone: false
-        };
-
-        // 直接ステートに新規アイテムをプッシュできないので、いったん sliceコピーを作成
-        const todos = this.state.todos.slice();
-        todos.push(item);
-        this.setState({
-            todos: todos,
-            item: ''
-        });
     }
 
     // 定義済みライフサイクルメソッド
@@ -547,8 +371,8 @@ onToggle(){
                 // purge={this.purge}
                 />
                 <StateButton
-onToggle={this.onToggle}
-isWorking={this.state.isWorking}
+                    onToggle={this.onToggle}
+                    isWorking={this.state.isWorking}
                 />
 
                 <div hidden={this.state.isWorking}>
@@ -587,16 +411,6 @@ isWorking={this.state.isWorking}
                     <br />
                 </div>
 
-                {/* <TodoList
-                    todos={this.state.todos}
-                    checkTodo={this.checkTodo}
-                    deleteTodo={this.deleteTodo}
-                />
-                <TodoForm
-                    item={this.state.item}
-                    updateItem={this.updateItem}
-                    addTodo={this.addTodo}
-                /> */}
             </div >
         );
     }
