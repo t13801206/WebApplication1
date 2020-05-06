@@ -32,6 +32,7 @@
     },
     "IIS": {
       "commandName": "IIS",
+      "workingDirectory": "index.html",
       "launchBrowser": true,
       "launchUrl": "http://localhost/WebApplication1",
       "environmentVariables": {

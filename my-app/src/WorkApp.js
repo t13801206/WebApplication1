@@ -1,25 +1,15 @@
 import React from 'react';
 import './WorkApp.css';
 
-
-const uri_ftp = 'api/ftp';
-const uri_settings = 'api/settings';
-const uri_workItems = "api/workitems";
-const todos = [
-    { id: 0, title: 'Task 0', isDone: false },
-    { id: 1, title: 'Task 1', isDone: false },
-    { id: 2, title: 'Task 2', isDone: true }
-];
+const uri_ftp = 'm/api/ftp';
+const uri_settings = 'm/api/settings';
+const uri_workItems = "m/api/workitems";
 
 function Header(props) {
-    // const remaining = props.todos.filter(todo => {
-    //     return !todo.isDone;
-    // });
     return (
-        <h1>Bunrui</h1>
+        <h1>Bunrui-</h1>
     );
 }
-
 
 function WorkingDirs(props) {
     const workingDirs = props.workingDirs.map(workingDir => {
@@ -30,9 +20,6 @@ function WorkingDirs(props) {
     return (
         <select id="workingDirs" name="example" onChange={() => props.setFiles()}>
             {workingDirs}
-            <option value="サンプル1">サンプル1</option>
-            <option value="サンプル2">サンプル2</option>
-            <option value="サンプル3">サンプル3</option>
         </select>
     );
 }
@@ -43,8 +30,6 @@ function Models(props) {
             <option valuse={setting.model}>{setting.model}</option>
         );
     });
-    // const workers = props.setting.map( setting => setting.worker);
-    // const className = props.setting.map( setting => setting.className);
     return (
         <select id="models" onChange={props.setTypes}>
             {models}
@@ -61,9 +46,6 @@ function Workers(props) {
     return (
         <select id="workers" name="example">
             {workers}
-            <option value="サンプル1">Worker1</option>
-            <option value="サンプル2">Worker2</option>
-            <option value="サンプル3">Worker3</option>
         </select>
     );
 }
@@ -71,20 +53,24 @@ function Workers(props) {
 function Types(props) {
     const types = props.types.map((type, index) => {
         return (
-            <button name={`button${index}`} disabled={!props.isWorking} onClick={() => props.buttonClick(index)}>{type} - key{index}</button>
+            <button
+                name={`button${index}`}
+                disabled={!props.isWorking}
+                onClick={() => props.buttonClick(index)}>
+                {
+                    index < 10 ?
+                        <div>{type} -KEY{index}</div> :
+                        <div>{type}</div>
+                }
+            </button>
         );
     });
-
-
-
     return (
         <div>
             {types}
         </div>
     );
-
 }
-
 
 function Files(props) {
     const files = props.files.map((file, index) => {
@@ -104,14 +90,14 @@ function Files(props) {
 function ImagePlace(props) {
     return (
         <div>
-            <img alt="" src={props.image} width="512"></img>
+            <img alt="" src={props.image} width={props.imageSize}></img>
         </div>
     );
 }
 
 function SaveButton(props) {
     return (
-        <button onClick={() => props.save()}>saveButton</button>
+        <button onClick={() => props.save()}>結果を保存する</button>
     );
 }
 
@@ -121,6 +107,20 @@ function StateButton(props) {
         <button onClick={() => props.onToggle()}>{tmp}</button>
     );
 }
+function ImageSize(props) {
+    return (
+        <select id="imagesize" onChange={() => {
+            const imagesize = document.getElementById("imagesize").value;
+            props.setImageSize(imagesize);
+        }}>
+            <option value="128">128px</option>
+            <option value="256">256px</option>
+            <option value="512">512px</option>
+        </select>
+    );
+
+}
+
 // このクラスにのみステータスを持たせる（親から子へ伝播）
 class WorkApp extends React.Component {
     constructor() {
@@ -135,7 +135,8 @@ class WorkApp extends React.Component {
             settings: [{ "model": "dammy", "worker": ["dammmy"], "className": ["dammy"] }],
             types: ["type1"],
             saveItems: "",
-            isWorking: false
+            isWorking: false,
+            imageSize: "128"
         };
         this.setWorkingDirs = this.setWorkingDirs.bind(this);
         this.setSettings = this.setSettings.bind(this);
@@ -145,6 +146,13 @@ class WorkApp extends React.Component {
         this.buttonClick = this.buttonClick.bind(this);
         this.save = this.save.bind(this);
         this.onToggle = this.onToggle.bind(this);
+        this.setImageSize = this.setImageSize.bind(this);
+    }
+
+    setImageSize(size) {
+        this.setState({
+            imageSize: size
+        });
     }
 
     onToggle() {
@@ -170,7 +178,6 @@ class WorkApp extends React.Component {
         };
         console.log(item);
 
-        let putFlag = false;
         fetch(uri_workItems, {
             method: 'POST',
             headers: {
@@ -242,8 +249,6 @@ class WorkApp extends React.Component {
                 });
             })
             .catch(error => console.error('Unable to get settings.', error));
-
-
     }
     setFiles() {
         const selectedDir = document.getElementById("workingDirs").value;
@@ -260,7 +265,6 @@ class WorkApp extends React.Component {
             }))
             .then(() => this.setImage(0))
             .catch(error => console.error('Unable to get files.', error));
-
     }
     setTypes() {
         const selectedIndex = document.getElementById("models").selectedIndex;
@@ -271,8 +275,6 @@ class WorkApp extends React.Component {
             workers: this.state.settings[selectedIndex].worker
         });
     }
-
-
     setImage(index) {
         console.log(`${uri_ftp}/${this.state.selectedDir}/${this.state.files[index]}`)
         fetch(`${uri_ftp}/${this.state.selectedDir}/${this.state.files[index]}`)
@@ -287,7 +289,6 @@ class WorkApp extends React.Component {
             }))
             .catch(error => console.error('Unable to setImage', error));
     }
-
     save() {
         fetch(`${uri_workItems}/${this.state.selectedDir}`)
             .then(response => response.json())
@@ -299,7 +300,6 @@ class WorkApp extends React.Component {
             .then(result => this.setState({
                 saveItems: result,
             }))
-
             .then(() => {
                 let write_json = JSON.stringify(this.state.saveItems);
                 let blob = new Blob([write_json], { type: 'application/json' });
@@ -314,13 +314,13 @@ class WorkApp extends React.Component {
 
             .catch(error => console.error('Unable to get save items', error));
     }
-
     // 定義済みライフサイクルメソッド
     componentDidUpdate() {
         // localStorage.setItem('todos', JSON.stringify(this.state.todos));
     }
-
     componentWillMount() {
+        this.setImageSize(128);
+
         console.log("componentWillMount")
         this.setSettings();
         this.setWorkingDirs();
@@ -350,8 +350,6 @@ class WorkApp extends React.Component {
             //   }
         });
     }
-
-
     // 定義済みライフサイクルメソッド
     componentDidMount() {
         // console.log("componentDidMount")
@@ -362,22 +360,13 @@ class WorkApp extends React.Component {
         // this.setTypes();
         // console.log(this.state.types);
     }
-
     render() {
         return (
             <div className="container" >
-                <Header
-                // todos={this.state.todos}
-                // purge={this.purge}
-                />
-                <StateButton
-                    onToggle={this.onToggle}
-                    isWorking={this.state.isWorking}
-                />
+                <Header />
 
                 <div hidden={this.state.isWorking}>
-
-
+                    作業フォルダ：
                     <WorkingDirs
                         workingDirs={this.state.workingDirs}
                         setFiles={this.setFiles}
@@ -386,31 +375,41 @@ class WorkApp extends React.Component {
                         save={this.save}
                     />
                     <br />
+                    分類モデル：
                     <Models
                         settings={this.state.settings}
                         setTypes={this.setTypes}
                     />
                     <br />
-
+                    作業者：
                     <Workers
                         workers={this.state.workers}
                     />
                 </div>
+                <StateButton
+                    onToggle={this.onToggle}
+                    isWorking={this.state.isWorking}
+                />
                 <Types
                     types={this.state.types}
                     isWorking={this.state.isWorking}
                     buttonClick={this.buttonClick}
                 />
                 <div hidden={!this.state.isWorking}>
-
-                    <ImagePlace image={this.state.image} />
+                    画像サイズ：
+                    <ImageSize
+                        imageSize={this.state.imageSize}
+                        setImageSize={this.setImageSize}
+                    />
+                    <ImagePlace
+                        image={this.state.image}
+                        imageSize={this.state.imageSize} />
 
                     <Files
                         files={this.state.files}
                     />
                     <br />
                 </div>
-
             </div >
         );
     }
