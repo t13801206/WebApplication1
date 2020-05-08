@@ -7,7 +7,7 @@ const uri_workItems = "m/api/workitems";
 
 function Header(props) {
     return (
-        <h1>Bunrui-</h1>
+        <h1>Bunrui 9001 Database Ver.</h1>
     );
 }
 
