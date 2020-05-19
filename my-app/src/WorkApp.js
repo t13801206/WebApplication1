@@ -7,7 +7,7 @@ const uri_workItems = "m/api/workitems";
 
 function Header(props) {
     return (
-        <h1>Bunrui 9001 Database Ver.</h1>
+        <h1>Bunrui 9001 Database Ver-1.</h1>
     );
 }
 
@@ -189,6 +189,10 @@ class WorkApp extends React.Component {
             .then(response => {
                 if (response.status === 500) {
                     throw new Error('fail POST 500 データがすでに存在しています');
+                }
+                else if (response.status === 409) {
+                    console.log("status is 409");
+                    throw new Error('fail POST 409');
                 }
                 else {
                     console.log("POST OK");
