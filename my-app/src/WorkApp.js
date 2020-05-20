@@ -1,5 +1,7 @@
 import React from 'react';
 import './WorkApp.css';
+import Button from 'react-bootstrap/Button';
+import "bootstrap/dist/css/bootstrap.min.css";
 
 const uri_ftp = 'm/api/ftp';
 const uri_settings = 'm/api/settings';
@@ -7,7 +9,7 @@ const uri_workItems = "m/api/workitems";
 
 function Header(props) {
     return (
-        <h1>Bunrui 9001 Database Ver-1.</h1>
+        <h1>Bunrui 9001 Database Ver-2.</h1>
     );
 }
 
@@ -118,7 +120,6 @@ function ImageSize(props) {
             <option value="512">512px</option>
         </select>
     );
-
 }
 
 // このクラスにのみステータスを持たせる（親から子へ伝播）
@@ -131,6 +132,7 @@ class WorkApp extends React.Component {
             workers: ["a1", "b1", "c1"],
             image: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAZlBMVEX///9PXXNPXXNPXXNPXXNPXXNPXXNPXXNPXXNPXXNPXXNPXXNPXXNPXXNbfYZxtqh2wq9RY3dOXHJ8hpDO0Mbg4NFYZXmGkJ/q6+7///9aZ3zNz8Tp6ux2foWAiJNHUmRMWW5GUWIctl4dAAAADXRSTlMAQICw0BBgoDDAUPAgSijlQgAAAAFiS0dEAIgFHUgAAAAJcEhZcwAACxMAAAsTAQCanBgAAAAHdElNRQfkBA0QFQhjo0B/AAABl0lEQVRYw8WX0XaDIAxARUCqNtpVO+3aTvv/P7nW1Ro3KDF4tvvm8eQKASGJIgcilgoeKBmLaAk6kfALmWhiuDDgwGwo4Sm8IPVNRRvwYF5OJMvBS5654w2QMK7hKyCidFi83bDNYQG5Dvm+dQy2+KLcDZSFzeDPf7F7UvjWIrONspwEpe092g/alsC3HcKTSOsG8gqmSQjr671XAOOflXIF6Xf8xrHUfsFjCIYvGLKggS+A+0IkIYLkJpAhAnkTQIgAXJuALBBRHCaIcQqq+jBQV3SBRAdBdXhSkQUK5bCeBDVZAJPg/YD4FwF4BU17HGgbnqA5PmlYgnYStBzBxxGxpkBRBXurQKGtzBJI9DP5kmgVxOh3ZgkEOlBYAnykcQQSH6ocQYKPdY5A44vlRBecZ9fruA4XuuDzEbKZXa7d5UQTnD+72eU6DqG/Ttyfr+7nfn69j1noO5qg639WSXpRjWirFTOOIGOU2S9KbrU0Xq1d6i5MZL5dv9wPbzjCW54Vmq7wti+88RxKX3frK/6m+V7W/n8BOtS/6Tme07cAAAAldEVYdGRhdGU6Y3JlYXRlADIwMjAtMDQtMTNUMTY6MTg6MTErMDA6MDDO9L4UAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDIwLTA0LTEzVDE2OjE4OjExKzAwOjAwv6kGqAAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAAASUVORK5CYII=",
             files: ["file1", "file2"],
+            files_backup: [],
             selectedDir: "",
             settings: [{ "model": "dammy", "worker": ["dammmy"], "className": ["dammy"] }],
             types: ["type1"],
@@ -147,6 +149,7 @@ class WorkApp extends React.Component {
         this.save = this.save.bind(this);
         this.onToggle = this.onToggle.bind(this);
         this.setImageSize = this.setImageSize.bind(this);
+        this.backFile = this.backFile.bind(this);
     }
 
     setImageSize(size) {
@@ -154,18 +157,21 @@ class WorkApp extends React.Component {
             imageSize: size
         });
     }
-
     onToggle() {
         const tmp = this.state.isWorking;
         console.log(`toggle ${this.state.isWorking} ${tmp} ${!tmp}`);
         this.setState({ isWorking: !tmp });
     }
-
     buttonClick(index) {
         console.log(`button ${index} clicked`);
+        this.setImage(this.state.files[1]);
 
         const file = this.state.files.shift();
-        this.setImage(0);
+
+        const files_backup = Object.assign([], this.state.files_backup);
+        files_backup.push(file);
+        this.setState({ files_backup });
+
 
         const dir = document.getElementById("workingDirs").value;
         const worker = document.getElementById("workers").value;
@@ -219,7 +225,6 @@ class WorkApp extends React.Component {
                     .catch(error => console.error('Unable to update item.', error));
             });
     }
-
     setWorkingDirs() {
         fetch(uri_ftp)
             .then(response => response.json())
@@ -255,6 +260,7 @@ class WorkApp extends React.Component {
             .catch(error => console.error('Unable to get settings.', error));
     }
     setFiles() {
+        this.setState({ files_backup: [] })
         const selectedDir = document.getElementById("workingDirs").value;
         console.log(`${uri_ftp}/${selectedDir}`);
         fetch(`${uri_ftp}/${selectedDir}`)
@@ -267,7 +273,7 @@ class WorkApp extends React.Component {
                 selectedDir: selectedDir,
                 files: result
             }))
-            .then(() => this.setImage(0))
+            .then(() => this.setImage(this.state.files[0]))
             .catch(error => console.error('Unable to get files.', error));
     }
     setTypes() {
@@ -279,13 +285,13 @@ class WorkApp extends React.Component {
             workers: this.state.settings[selectedIndex].worker
         });
     }
-    setImage(index) {
-        console.log(`${uri_ftp}/${this.state.selectedDir}/${this.state.files[index]}`)
-        fetch(`${uri_ftp}/${this.state.selectedDir}/${this.state.files[index]}`)
+    setImage(_file) {
+        console.log(`${uri_ftp}/${this.state.selectedDir}/${_file}`)
+        fetch(`${uri_ftp}/${this.state.selectedDir}/${_file}`)
             .then(response => response.text())
             .then(responseText => {
                 console.log("image:::")
-                console.log(responseText);
+                // console.log(responseText);
                 return responseText;
             })
             .then(result => this.setState({
@@ -318,6 +324,16 @@ class WorkApp extends React.Component {
 
             .catch(error => console.error('Unable to get save items', error));
     }
+    backFile() {
+        console.log("1つ戻ります");
+        const file = this.state.files_backup.pop();
+        const files = Object.assign([], this.state.files);
+        files.unshift(file);
+        this.setState({ files });
+        console.log(this.state.files[0]);
+        this.setImage(file);
+    }
+
     // 定義済みライフサイクルメソッド
     componentDidUpdate() {
         // localStorage.setItem('todos', JSON.stringify(this.state.todos));
@@ -368,6 +384,7 @@ class WorkApp extends React.Component {
         return (
             <div className="container" >
                 <Header />
+                <Button variant="primary">Primary</Button>
 
                 <div hidden={this.state.isWorking}>
                     作業フォルダ：
@@ -408,7 +425,8 @@ class WorkApp extends React.Component {
                     <ImagePlace
                         image={this.state.image}
                         imageSize={this.state.imageSize} />
-
+                    {/* <ModoruButton backFile={this.backFile} /> */}
+                    <Button onClick={()=>{this.backFile()}}>戻るボタン</Button>
                     <Files
                         files={this.state.files}
                     />

@@ -52,7 +52,7 @@ const resolveModule = (resolveFn, filePath) => {
 module.exports = {
   dotenv: resolveApp('.env'),
   appPath: resolveApp('.'),
- appBuild: resolveApp('build9001-1'),
+  appBuild: resolveApp('build9001-1'),
 //  appBuild: resolveApp('build'),
   // appBuild: resolveApp('../WebApplication1/wwwroot'),
   appPublic: resolveApp('public'),
