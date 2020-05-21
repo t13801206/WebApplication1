@@ -1,7 +1,9 @@
 import React from 'react';
 import './WorkApp.css';
 import Button from 'react-bootstrap/Button';
+import Form from 'react-bootstrap/Form';
 import "bootstrap/dist/css/bootstrap.min.css";
+import LineExample from './line';
 
 const uri_ftp = 'm/api/ftp';
 const uri_settings = 'm/api/settings';
@@ -20,9 +22,15 @@ function WorkingDirs(props) {
         );
     });
     return (
-        <select id="workingDirs" name="example" onChange={() => props.setFiles()}>
-            {workingDirs}
-        </select>
+        // <select id="workingDirs" name="example" onChange={() => props.setFiles()}>
+        //     {workingDirs}
+        // </select>
+        <Form>
+            <Form.Label>作業フォルダ</Form.Label>
+            <Form.Control as="select" custom id="workingDirs" name="example" onChange={() => props.setFiles()}>
+                {workingDirs}
+            </Form.Control>
+        </Form>
     );
 }
 
@@ -33,9 +41,15 @@ function Models(props) {
         );
     });
     return (
-        <select id="models" onChange={props.setTypes}>
-            {models}
-        </select>
+        // <select id="models" onChange={props.setTypes}>
+        //     {models}
+        // </select>
+        <Form>
+            <Form.Label>分類モデル</Form.Label>
+            <Form.Control as="select" custom onChange={() => props.setTypes()} id="models">
+                {models}
+            </Form.Control>
+        </Form>
     );
 }
 
@@ -46,25 +60,34 @@ function Workers(props) {
         );
     });
     return (
-        <select id="workers" name="example">
-            {workers}
-        </select>
+        // <select id="workers" name="example">
+        //     {workers}
+        // </select>
+        <Form>
+            <Form.Label>作業者</Form.Label>
+            <Form.Control as="select" custom id="workers" name="example">
+                {workers}
+            </Form.Control>
+        </Form>
     );
 }
 
 function Types(props) {
     const types = props.types.map((type, index) => {
         return (
-            <button
-                name={`button${index}`}
-                disabled={!props.isWorking}
-                onClick={() => props.buttonClick(index)}>
-                {
-                    index < 10 ?
-                        <div>{type} -KEY{index}</div> :
-                        <div>{type}</div>
-                }
-            </button>
+            <>
+                <Button
+                    variant="secondary"
+                    name={`button${index}`}
+                    disabled={!props.isWorking}
+                    onClick={() => props.buttonClick(index)}>
+                    {
+                        index < 10 ?
+                            <div>{type} -KEY{index}</div> :
+                            <div>{type}</div>
+                    }
+                </Button>{' '}
+            </>
         );
     });
     return (
@@ -99,26 +122,36 @@ function ImagePlace(props) {
 
 function SaveButton(props) {
     return (
-        <button onClick={() => props.save()}>結果を保存する</button>
+        <Button variant="info" onClick={() => props.save()}>結果を保存する</Button>
     );
 }
 
 function StateButton(props) {
-    let tmp = props.isWorking ? "戻る" : "開始";
+    let tmp = props.isWorking ? "TOPへ戻る" : "ラベリングを開始する";
     return (
-        <button onClick={() => props.onToggle()}>{tmp}</button>
+        <Button onClick={() => props.onToggle()}>{tmp}</Button>
+        // <button className="button-right">test</button>
     );
 }
 function ImageSize(props) {
     return (
-        <select id="imagesize" onChange={() => {
-            const imagesize = document.getElementById("imagesize").value;
-            props.setImageSize(imagesize);
-        }}>
-            <option value="128">128px</option>
-            <option value="256">256px</option>
-            <option value="512">512px</option>
-        </select>
+        // <select id="imagesize" onChange={() => {
+        //     const imagesize = document.getElementById("imagesize").value;
+        //     props.setImageSize(imagesize);
+        // }}>
+        //     </select>
+
+        <Form>
+            <Form.Label>画像サイズ</Form.Label>
+            <Form.Control as="select" custom id="imagesize" onChange={() => {
+                const imagesize = document.getElementById("imagesize").value;
+                props.setImageSize(imagesize);
+            }}>
+                <option value="128">128 px</option>
+                <option value="256">256 px</option>
+                <option value="512">512 px</option>
+            </Form.Control>
+        </Form>
     );
 }
 
@@ -138,7 +171,8 @@ class WorkApp extends React.Component {
             types: ["type1"],
             saveItems: "",
             isWorking: false,
-            imageSize: "128"
+            imageSize: "128",
+            plotdata: [1, 2, 3, 4]
         };
         this.setWorkingDirs = this.setWorkingDirs.bind(this);
         this.setSettings = this.setSettings.bind(this);
@@ -383,50 +417,68 @@ class WorkApp extends React.Component {
     render() {
         return (
             <div className="container" >
-                <Header />
-                <Button variant="primary">Primary</Button>
-
-                <div hidden={this.state.isWorking}>
-                    作業フォルダ：
-                    <WorkingDirs
-                        workingDirs={this.state.workingDirs}
-                        setFiles={this.setFiles}
-                    />
-                    <SaveButton
-                        save={this.save}
-                    />
-                    <br />
-                    分類モデル：
-                    <Models
-                        settings={this.state.settings}
-                        setTypes={this.setTypes}
-                    />
-                    <br />
-                    作業者：
-                    <Workers
-                        workers={this.state.workers}
-                    />
+                <div className="row">
+                    <div className="col-md-8">
+                        <Header />
+                    </div>
+                    <div className="col-md-4">
+                        <StateButton
+                            onToggle={this.onToggle}
+                            isWorking={this.state.isWorking}
+                        />
+                    </div>
                 </div>
-                <StateButton
-                    onToggle={this.onToggle}
-                    isWorking={this.state.isWorking}
-                />
+                <div hidden={this.state.isWorking}>
+                    <div className="row">
+                        <div className="col-md-6">
+                            <LineExample data={this.state.plotdata} />
+                        </div>
+                        <div className="col-md-6">
+                            <LineExample data={this.state.plotdata} />
+                        </div>
+                    </div>
+                    <div className="row">
+                        <div className="col-md-8">
+                            <WorkingDirs
+                                workingDirs={this.state.workingDirs}
+                                setFiles={this.setFiles}
+                            />
+                        </div>
+                        <div className="col-md-4 align-self-end">
+                            <SaveButton
+                                save={this.save}
+                            />
+                        </div>
+                    </div>
+                    <br />
+                    <div className="row">
+                        <div className="col-md-6">
+                            <Models
+                                settings={this.state.settings}
+                                setTypes={this.setTypes}
+                            />
+                        </div>
+                        <div className="col-md-6">
+                            <Workers
+                                workers={this.state.workers}
+                            />
+                        </div>
+                    </div>
+                </div>
                 <Types
                     types={this.state.types}
                     isWorking={this.state.isWorking}
                     buttonClick={this.buttonClick}
                 />
                 <div hidden={!this.state.isWorking}>
-                    画像サイズ：
+                    <ImagePlace
+                        image={this.state.image}
+                        imageSize={this.state.imageSize} />
                     <ImageSize
                         imageSize={this.state.imageSize}
                         setImageSize={this.setImageSize}
                     />
-                    <ImagePlace
-                        image={this.state.image}
-                        imageSize={this.state.imageSize} />
-                    {/* <ModoruButton backFile={this.backFile} /> */}
-                    <Button onClick={()=>{this.backFile()}}>戻るボタン</Button>
+                    <Button variant="info" onClick={() => { this.backFile() }}>１枚戻る</Button>
                     <Files
                         files={this.state.files}
                     />
